@@ -68,10 +68,9 @@ class Board
 
   def validate_move(move, board, player, start_end)
     return false if in_bounds?(move) == false
+    return true if start_end == 'end'
 
     if board[move].is_a?(Piece) && board[move].color == player.color && start_end == 'start'
-      true
-    elsif start_end == 'end'
       true
     else
       puts "Invalid move. Please select a #{player.color} piece to move"
