@@ -1,3 +1,7 @@
+# frozen_string_literal: true
+
+require_relative 'string'
+
 class Renderer
   # render board with notations
   def render_board(grid)
@@ -7,7 +11,7 @@ class Renderer
     grid.each_with_index do |row_val, row|
       print '| '
       row_val.each_with_index do |_col_val, col|
-        # display an existing marker any, else blank
+        # display an existing piece if any, else blank
         s = grid[row][col]
         print s
         print ' | '
