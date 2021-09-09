@@ -47,17 +47,11 @@ class Board
     puts "#{player.color.capitalize}'s move"
 
     loop do
-      puts 'Select piece to move'
-      move_from = coords(gets.chomp)
+      move_from = player_input('Select piece to move')
       break if validate_move(move_from, board, player, 'start')
     end
 
-    loop do
-      puts 'Select position to move to'
-      move_to = coords(gets.chomp)
-      break if validate_move(move_to, board, board, 'end')
-    end
-
+    move_to = player_input('Select position to move to')
     move_piece(move_from, move_to, board)
   end
 
@@ -67,14 +61,19 @@ class Board
   end
 
   def validate_move(move, board, player, start_end)
-    return false if in_bounds?(move) == false
-    return true if start_end == 'end'
-
     if board[move].is_a?(Piece) && board[move].color == player.color && start_end == 'start'
       true
     else
       puts "Invalid move. Please select a #{player.color} piece to move"
       false
+    end
+  end
+
+  def player_input(msg)
+    loop do
+      puts msg
+      input = coords(gets.chomp)
+      return input if in_bounds?(input)
     end
   end
 end
