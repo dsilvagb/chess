@@ -3,6 +3,7 @@ require_relative 'piece'
 require_relative 'renderer'
 require_relative 'player'
 
+# controls the flow of the game
 class Chess
   attr_reader :current_player, :board
 

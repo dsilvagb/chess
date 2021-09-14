@@ -1,26 +1,35 @@
 # frozen_string_literal: true
 
+require_relative 'movement'
+require_relative 'string'
+
+# empty squares on grid
 EMPTY_POS = ' '
 
 # sets up the a 8 x 8 array to represent the squares
 # on the chess board
 class Board
+  include BoardMovement
+
   attr_reader :grid
 
   def initialize(board_size = 8)
     @grid = Array.new(board_size) { Array.new(board_size) { EMPTY_POS } }
   end
 
+  # override array to allow placement of piece on grid
   def []=(location, piece)
     row, column = location
     grid[row][column] = piece
   end
 
+  # override array to allow grid location to be called directly
   def [](location)
     row, column = location
     grid[row][column]
   end
 
+  # validate if location is on board
   def in_bounds?(location)
     row, column = location
 
@@ -29,7 +38,6 @@ class Board
                    row >= 0 &&
                    column >= 0
 
-    puts 'Selection out of range'
     false
   end
 
@@ -40,40 +48,36 @@ class Board
     [row, col]
   end
 
+  # grid co-ordinates to chess notation
+  def notation(pos)
+    col = (pos[1] + 'a'.ord).chr
+    row = 8 - pos[0]
+    col + row.to_s
+  end
+
+  # for for move and validates
   def player_move(player, board)
     move_from = []
     move_to = []
 
     puts "#{player.color.capitalize}'s move"
-
     loop do
       move_from = player_input('Select piece to move')
-      break if validate_move(move_from, board, player, 'start')
+      move_to = player_input('Select position to move to')
+      piece = board[move_from]
+      break if validate_move(move_from, move_to, board, player, piece, 'start') &&
+               validate_move(move_from, move_to, board, player, piece, 'end')
     end
 
-    move_to = player_input('Select position to move to')
     move_piece(move_from, move_to, board)
   end
 
-  def move_piece(move_from, move_to, board)
-    board[move_to] = board[move_from]
-    board[move_from] = EMPTY_POS
-  end
-
-  def validate_move(move, board, player, start_end)
-    if board[move].is_a?(Piece) && board[move].color == player.color && start_end == 'start'
-      true
-    else
-      puts "Invalid move. Please select a #{player.color} piece to move"
-      false
-    end
-  end
-
+  # player input and range check
   def player_input(msg)
     loop do
       puts msg
       input = coords(gets.chomp)
-      return input if in_bounds?(input)
+      in_bounds?(input) ? (return input) : (puts 'Selection out of range'.red)
     end
   end
 end

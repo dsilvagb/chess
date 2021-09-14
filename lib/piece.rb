@@ -3,9 +3,9 @@ require_relative 'string'
 
 # sets up the pieces with color and type
 class Piece
-  attr_reader :type, :color, :moved
+  attr_accessor :type, :color, :moved
 
-  def initialize(type, color, moved = false)
+  def initialize(type, color, moved: false)
     @type = type
     @color = color
     @moved = moved
