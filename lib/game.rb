@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'board'
 require_relative 'piece'
 require_relative 'renderer'
@@ -25,7 +27,7 @@ class Chess
   def play
     new_game
     loop do
-      board.player_move(current_player, board)
+      board.player_move(current_player)
       switch_current_player(current_player)
       @render.render_board(board.grid)
     end
@@ -45,5 +47,4 @@ class Chess
   def switch_current_player(player)
     @current_player = player == @player_white ? @player_black : @player_white
   end
-
 end

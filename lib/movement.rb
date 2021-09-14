@@ -1,24 +1,26 @@
+# frozen_string_literal: true
+
 # methods for movement of pieces
 module BoardMovement
   # moves piece on board
-  def move_piece(move_from, move_to, board)
-    board[move_to] = board[move_from]
-    board[move_from] = EMPTY_POS
-    board[move_to].moved = true
+  def move_piece(move_from, move_to)
+    self[move_to] = self[move_from]
+    self[move_from] = EMPTY_POS
+    self[move_to].moved = true
   end
 
   # validates selection of correct piece
-  def validate_move(move_from, move_to, board, player, piece, start_end)
+  def validate_move(move_from, move_to, player, piece, start_end)
     case start_end
     when 'start'
-      check_start(move_from, board, player)
+      check_start(move_from, player)
     when 'end'
-      check_end(move_from, move_to, board, player, piece)
+      check_end(move_from, move_to, piece)
     end
   end
 
-  def check_start(move, board, player)
-    if board[move].is_a?(Piece) && board[move].color == player.color
+  def check_start(move, player)
+    if self[move].is_a?(Piece) && self[move].color == player.color
       true
     else
       puts "Invalid move #{notation(move)}.  Please select a #{player.color} piece"
@@ -26,8 +28,8 @@ module BoardMovement
     end
   end
 
-  def check_end(move_from, move_to, board, _player, piece)
-    valid_moves = valid_moves(move_from, board, piece)
+  def check_end(move_from, move_to, piece)
+    valid_moves = valid_moves(move_from, piece)
     if valid_moves.include?(move_to)
       true
     elsif valid_moves == []
@@ -40,42 +42,34 @@ module BoardMovement
     end
   end
 
-  def valid_moves(pos, board, piece)
+  def valid_moves(pos, piece)
     piece_type = piece.type
-    moved = piece.moved
 
-    pawn_moves_white = [-1, 0]
-    pawn_moves_black = [1, 0]
-    pawn_capture_white = [[-1, -1], [-1, 1]]
-    pawn_capture_black = [[1, -1], [1, 1]]
+    moves = { pawn_white: [-1, 0],
+              pawn_black: [1, 0],
+              pawn_capture_white: [[-1, -1], [-1, 1]],
+              pawn_capture_black: [[1, -1], [1, 1]],
+              rook: [[1, 0], [-1, 0], [0, 1], [0, -1]],
+              bishop: [[1, -1], [1, 1], [-1, -1], [-1, 1]],
+              knight: [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]] }
+    moves[:queen] = moves[:rook] + moves[:bishop]
+    moves[:king] = moves[:queen]
 
-    rook_moves = [[1, 0], [-1, 0], [0, 1], [0, -1]]
-    bishop_moves = [[1, -1], [1, 1], [-1, -1], [-1, 1]]
-    knight_moves = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]]
-    queen_moves = rook_moves + bishop_moves
-
-    case piece_type
-    when :rook
-      possible_moves = sliding_moves(board, rook_moves, pos)
-    when :bishop
-      possible_moves = sliding_moves(board, bishop_moves, pos)
-    when :queen
-      possible_moves = sliding_moves(board, queen_moves, pos)
-    when :knight
-      possible_moves = single_move(board, knight_moves, pos)
-    when :king
-      possible_moves = single_move(board, queen_moves, pos)
-    when :pawn
+    if %i[rook bishop queen].include?(piece_type)
+      possible_moves = sliding_moves(moves[piece_type], pos)
+    elsif %i[knight king].include?(piece_type)
+      possible_moves = single_move(moves[piece_type], pos)
+    elsif piece_type == :pawn
       possible_moves = if piece.color == :white
-                         pawn_moves(board, pawn_moves_white, pawn_capture_white, pos, moved)
+                         pawn_moves(moves[:pawn_white], moves[:pawn_capture_white], pos)
                        else
-                         pawn_moves(board, pawn_moves_black, pawn_capture_black, pos, moved)
+                         pawn_moves(moves[:pawn_black], moves[:pawn_capture_black], pos)
                        end
     end
     possible_moves
   end
 
-  def sliding_moves(board, moves, pos, possible_moves = [])
+  def sliding_moves(moves, pos, possible_moves = [])
     org_pos = pos
     moves.each do |move|
       loop do
@@ -83,7 +77,7 @@ module BoardMovement
         if !in_bounds?(move_step)
           pos = org_pos
           break
-        elsif board[move_step].is_a?(Piece)
+        elsif self[move_step].is_a?(Piece)
           possible_moves << move_step
           break
         end
@@ -94,28 +88,25 @@ module BoardMovement
     possible_moves
   end
 
-  def single_move(board, moves, pos, possible_moves = [])
+  def single_move(moves, pos, possible_moves = [])
     moves.each do |move|
       move_step = [pos, move].transpose.map(&:sum)
       possible_moves << move_step if (in_bounds?(move_step) &&
-                                     board[move_step] == EMPTY_POS) ||
+                                     self[move_step] == EMPTY_POS) ||
                                      (in_bounds?(move_step) &&
-                                      board[move_step].color != board[pos].color)
+                                      self[move_step].color != self[pos].color)
     end
     possible_moves
   end
 
-  def pawn_moves(board, moves, capture_moves, pos, moved, possible_moves = [])
-    capture_moves.each do |move|
-      move_step = [pos, move].transpose.map(&:sum)
-      possible_moves << move_step if in_bounds?(move_step) &&
-                                     board[move_step] != EMPTY_POS &&
-                                     board[move_step].color != board[pos].color
-    end
+  def pawn_moves(moves, capture_moves, pos, possible_moves = [])
+    moved = self[pos].moved
+
+    possible_moves = pawn_capture(capture_moves, pos, possible_moves)
 
     2.times do
       move_step = [pos, moves].transpose.map(&:sum)
-      break if !in_bounds?(move_step) || board[move_step].is_a?(Piece)
+      break if !in_bounds?(move_step) || self[move_step].is_a?(Piece)
 
       possible_moves << move_step
       break if moved == true
@@ -123,6 +114,16 @@ module BoardMovement
       pos = move_step
     end
 
+    possible_moves
+  end
+
+  def pawn_capture(capture_moves, pos, possible_moves)
+    capture_moves.each do |move|
+      move_step = [pos, move].transpose.map(&:sum)
+      possible_moves << move_step if in_bounds?(move_step) &&
+                                     self[move_step] != EMPTY_POS &&
+                                     self[move_step].color != self[pos].color
+    end
     possible_moves
   end
 end

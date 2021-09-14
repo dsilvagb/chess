@@ -56,20 +56,18 @@ class Board
   end
 
   # for for move and validates
-  def player_move(player, board)
-    move_from = []
-    move_to = []
-
+  def player_move(player, move_from = [], move_to = [])
     puts "#{player.color.capitalize}'s move"
+
     loop do
       move_from = player_input('Select piece to move')
       move_to = player_input('Select position to move to')
-      piece = board[move_from]
-      break if validate_move(move_from, move_to, board, player, piece, 'start') &&
-               validate_move(move_from, move_to, board, player, piece, 'end')
+      piece = self[move_from]
+      break if validate_move(move_from, move_to, player, piece, 'start') &&
+               validate_move(move_from, move_to, player, piece, 'end')
     end
 
-    move_piece(move_from, move_to, board)
+    move_piece(move_from, move_to)
   end
 
   # player input and range check

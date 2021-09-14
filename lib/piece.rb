@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require_relative 'string'
 
 # sets up the pieces with color and type
