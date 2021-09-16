@@ -2,46 +2,7 @@
 
 # methods for movement of pieces
 module BoardMovement
-  # moves piece on board
-  def move_piece(move_from, move_to)
-    self[move_to] = self[move_from]
-    self[move_from] = EMPTY_POS
-    self[move_to].moved = true
-  end
-
-  # validates selection of correct piece
-  def validate_move(move_from, move_to, player, piece, start_end)
-    case start_end
-    when 'start'
-      check_start(move_from, player)
-    when 'end'
-      check_end(move_from, move_to, piece)
-    end
-  end
-
-  def check_start(move, player)
-    if self[move].is_a?(Piece) && self[move].color == player.color
-      true
-    else
-      puts "Invalid move #{notation(move)}.  Please select a #{player.color} piece"
-      false
-    end
-  end
-
-  def check_end(move_from, move_to, piece)
-    valid_moves = valid_moves(move_from, piece)
-    if valid_moves.include?(move_to)
-      true
-    elsif valid_moves == []
-      puts "No valid moves for piece at #{notation(move_from)}".red
-    else
-      puts "Invalid move #{notation(move_to)}. Valid moves".red
-      valid_moves.each { |e| puts notation(e) }
-      puts ''
-      false
-    end
-  end
-
+  # piece valid movement
   def valid_moves(pos, piece)
     piece_type = piece.type
 
@@ -69,6 +30,7 @@ module BoardMovement
     possible_moves
   end
 
+  # behaviour of pieces that can move multiple squares
   def sliding_moves(moves, pos, possible_moves = [])
     org_pos = pos
     moves.each do |move|
@@ -77,8 +39,12 @@ module BoardMovement
         if !in_bounds?(move_step)
           pos = org_pos
           break
+        elsif self[move_step] != EMPTY_POS && self[move_step].color == self[org_pos].color
+          pos = org_pos
+          break
         elsif self[move_step].is_a?(Piece)
           possible_moves << move_step
+          pos = org_pos
           break
         end
         possible_moves << move_step
@@ -88,6 +54,7 @@ module BoardMovement
     possible_moves
   end
 
+  # pieces that can move only once
   def single_move(moves, pos, possible_moves = [])
     moves.each do |move|
       move_step = [pos, move].transpose.map(&:sum)
@@ -99,6 +66,7 @@ module BoardMovement
     possible_moves
   end
 
+  # pawn first move, subsequent moves
   def pawn_moves(moves, capture_moves, pos, possible_moves = [])
     moved = self[pos].moved
 
@@ -117,6 +85,7 @@ module BoardMovement
     possible_moves
   end
 
+  # pawn capture move
   def pawn_capture(capture_moves, pos, possible_moves)
     capture_moves.each do |move|
       move_step = [pos, move].transpose.map(&:sum)

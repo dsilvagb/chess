@@ -2,6 +2,7 @@
 
 require_relative 'string'
 
+# renders the board and displays the pieces
 class Renderer
   # render board with notations
   def render_board(grid)

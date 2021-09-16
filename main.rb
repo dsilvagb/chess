@@ -8,3 +8,4 @@ require_relative 'lib/player'
 
 chess = Chess.new
 chess.play
+
