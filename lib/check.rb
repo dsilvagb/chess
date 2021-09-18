@@ -7,10 +7,11 @@ module CheckMate
     piece_color = color == :white ? :black : :white
     king_position = king_position(color)
     possible_check(piece_color, king_position) ? true : (return false)
-    if check_mate?
-      puts "Checkmate !!!!, #{piece_color} win"
+    if check_mate?(color)
+      puts "Checkmate !!!!, #{piece_color} wins"
+      exit!
     else
-      puts 'Check !!!'.blink
+      puts 'Check !!!'.red
     end
     true
   end
@@ -58,7 +59,26 @@ module CheckMate
   end
 
   # check mate
-  def check_mate?; end
+  def check_mate?(color)
+    op_color = color == :white ? :black : :white
+    grid_org = Marshal.load(Marshal.dump(grid))
+    grid.each_with_index do |row, row_index|
+      row.each_with_index do |piece, piece_index|
+        pos = [row_index, piece_index]
+        next unless piece.is_a?(Piece) && piece.color == color
+
+        valid_moves = valid_moves(pos, piece)
+        valid_moves.each do |move|
+          move_piece(pos, move)
+          king_pos = king_position(color)
+          check = possible_check(op_color, king_pos)
+          rollback(grid_org)
+          return false unless check
+        end
+      end
+    end
+    true
+  end
 
   # roll back if check on current move
   def rollback(grid_org)

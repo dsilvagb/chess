@@ -59,8 +59,8 @@ class Board
 
   # player piece selection and validates moves
   def player_move(player, move_from = [], move_to = [])
+    king_check?(player.color)
     puts "#{player.color.capitalize}'s move"
-    puts 'Check !!!'.red if king_check?(player.color)
 
     loop do
       move_from = player_input('Select piece to move')
